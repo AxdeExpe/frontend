@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import LoginButtonVue from '../components/LoginButton.vue'
+import Katalog from '../components/KatalogPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,14 +22,16 @@ const router = createRouter({
     {
       path: '/katalog',
       name: 'katalog',
-      component: () => import('../views/KatalogView.vue')
+      // component: () => import('../views/KatalogView.vue')
+      component: Katalog
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import('../views/Login-Button.vue')
+      // component: () => import('../views/Login-Button.vue')
+      component: LoginButtonVue
     }
   ]
-})
+});
 
-export default router
+export default router;
