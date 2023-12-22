@@ -1,11 +1,12 @@
 <script setup lang="ts">
     import { ref } from "vue";
     import { useRouter } from "vue-router";
+    import { updateIsloggedIn  } from "@/store";
     
     let username = ref('');
     let password = ref('');
     let router = useRouter();
-
+    
     let doLogin = async () => {
       try {
         let response = await fetch('http://ivm108.informatik.htw-dresden.de/ewa/g08/backend/login.php', {
@@ -21,6 +22,7 @@
 
         if (response.ok) {
           console.log('Login erfolgreich');
+          updateIsloggedIn(true);
           router.push('/');
           alert('Login erfolgreich');
         } else if (response.status === 400) {
@@ -52,6 +54,7 @@
             <input v-model="username" type="text" class="username form-control" placeholder="Username" required><br>
             <input v-model="password" @keydown.enter="doLogin" type="password" class="password form-control" placeholder="Password" required><br>
             <button @click="doLogin" class="btn btn-primary">Login</button>
+            <button @click="router.push('/register')" class="register">Register</button>
         </div>
       </div>
     </div>
@@ -67,11 +70,11 @@ html{
 .flex {
   display: flex;
   flex-direction: column;
-  background-color: black;
+  /* background-color: black; */
   height: 100%;
 }
 .flex-box {
-  background-color: black;
+  /* background-color: black; */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,5 +118,29 @@ input[type="submit"]:hover {
   background-color: #440000;
   font-weight: bold;
   color: white;
+}
+
+.register{
+  
+  left: 100%;
+  position: relative;
+
+  background-color: rgb(212, 212, 212);
+  padding: 10px;
+  margin: auto;
+  box-sizing: border-box;
+  max-width: 100%;
+  width: fit-content;
+  font-weight: bold;
+  text-align: center;
+
+  border: 1px solid black;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.register:hover {
+  background-color: rgba(212, 212, 212,0.8);
+  font-weight: bold;
 }
 </style>

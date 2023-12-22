@@ -18,6 +18,7 @@ interface KatalogItem {
 let katalogItems = ref<Array<KatalogItem>>([]);
 
 onMounted(async () => {
+
   try {
     let response = await fetch('https://ivm108.informatik.htw-dresden.de/ewa/g08/backend/Katalog_Beleg_Select_All.php', {
       method: 'POST',
@@ -36,12 +37,16 @@ onMounted(async () => {
         stock: 'stock',
       }),
     });
-
     if (response.ok) {
       let data = await response.json();
       katalogItems.value = data.map((item: KatalogItem) => ({ ...item, quantity: 0 }));
       console.log(data);
-    } else {
+    }
+    else if(response.status === 404){
+      alert('Katalog nicht gefunden');
+      console.error('Fehler beim Abrufen des Katalogs: Katalog nicht gefunden');
+    } 
+    else {
       console.error('Fehler beim Abrufen des Katalogs: Serverfehler');
     }
   } catch (error) {
@@ -60,6 +65,11 @@ let decodeBase64Image = (base64String: string) => {
 };
 
 let doBestellen = (item: KatalogItem) => {
+
+  if(item.quantity <= 0){
+    return;
+  }
+
   if (item.stock < item.quantity) {
     alert('Nicht genügend Exemplare auf Lager');
     item.quantity = 0;
@@ -69,14 +79,45 @@ let doBestellen = (item: KatalogItem) => {
   addToWarenkorb(item);
   item.quantity = 0;
 };
+
+let increaseQuantity = (item: KatalogItem) => {
+  item.quantity++;
+};
+
+let decreaseQuantity = (item: KatalogItem) => {
+
+  if(item.quantity <= 0){
+    return;
+  }
+
+  item.quantity--;
+};
+
+let resizeProduct = (item: KatalogItem, index: number) => {
+
+  let container = document.getElementById(item.id.toString());
+
+  if(container === null){
+    return;
+  }
+
+  let isOverflowing = container.scrollHeight > container.offsetHeight;
+
+  if (isOverflowing) {
+    container.style.maxHeight = 'fit-content';
+
+  } else {
+    container.style.maxHeight = '50vh';
+  }
+};
+
 </script>
 
 <template>
     <div>
-    <div v-for="item in katalogItems" :key="item.id" class="item-box" id="product">
+    <div v-for="(item, index) in katalogItems" :key="item.id" class="item-box" :id="item.id.toString()" @click="resizeProduct(item, index)">
       <div class="Image_container flex_inner">
-        <!-- <img :src="item.image" alt="Bild" width="100" height="100"> -->
-        <img :src="decodeBase64Image(item.image)" class="image" alt="Bild" width="100" height="100">
+        <img :src="decodeBase64Image(item.image)" class="image" alt="Product_Image" width="100" height="100">
       </div>
       <div class="titel flex_inner">
         <h1>Titel</h1>
@@ -112,8 +153,8 @@ let doBestellen = (item: KatalogItem) => {
           <a> {{ item.quantity }} </a>
         </div>
         <div class="buttons">
-          <button class="button" @click="item.quantity++">+</button>
-          <button class="button" @click="item.quantity--">-</button>
+          <button class="button" @click="increaseQuantity(item)">+</button>
+          <button class="button" @click="decreaseQuantity(item)">-</button>
         </div>
         <div class="buttons">
           <button class="bestellen" @click="doBestellen(item)">In den Warenkorb</button>
@@ -124,6 +165,7 @@ let doBestellen = (item: KatalogItem) => {
 </template>
 
 <style scoped>
+
 h1{
     font-size: 2vh;
     text-decoration: underline;
@@ -136,20 +178,22 @@ a{
     margin: auto;
 }
 
+
 .item-box {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     justify-content: space-between;
-
 
     background-color: rgb(0, 80, 133);
     color: white;
+    overflow: hidden;
 
     width: fit-content;
     min-width: 90%;
     max-width: 90%;
 
+    height: fit-content;
+
+    max-height: 50vh;
 
     margin: auto; /*top right bottom left*/
     margin-top: 10vh;
@@ -157,101 +201,96 @@ a{
     padding: 0;
     position: relative;
 
-    border: 1px solid red;
-
     cursor: pointer;
 }
 .flex_inner{
     flex-direction: column;
     max-width: 100%;
-    flex: 1;
+    /* flex: 1; */
 }
 .Image_container {
-    border: 1px solid red;
-    margin: 1em;
-    position: relative; /* Fügt relative Positionierung hinzu, damit absolute Positionierung des Bildes relativ zum Container erfolgt */
+    justify-content: center;
+    margin: 1em -3em 1em 1em; /*top right bottom left*/
+    position: relative; 
+    width: 10%;
 }
 
 .image {
-    border: 1px solid red;
     width: 100%;
     height: 100%;
     object-fit: contain;
-    position: absolute; /* Absolute Positionierung innerhalb des Containers */
+
     top: 0;
     left: 0;
 }
+
+
 .titel{
     text-align: center;
-    border: 1px solid red;
-    margin: 1em 1em ; /*top right bottom left*/
+    margin: 1em -3em 1em -3em; /*top right bottom left*/
     width: fit-content;
-    max-width: 11%;
+    width: 9%;
     word-wrap: break-word;
 }
 .author{
     text-align: center;
-    border: 1px solid red;
-    margin: 1em 1em 1em 1em; /*top right bottom left*/
+    margin: 1em -3em 1em -3em; /*top right bottom left*/
     width: fit-content;
-    max-width: 11%;
+    width: 9%;
     word-wrap: break-word;
 }
 .Verlag{
     text-align: center;
-    border: 1px solid red;
-    margin: 1em 1em ; /*top right bottom left*/
+    margin: 1em -3em 1em -3em; /*top right bottom left*/
     width: fit-content;
-    max-width: 11%;
+    width: 9%;
     word-wrap: break-word;
 }
 .beschreibung{
     text-align: center;
-    border: 1px solid red;
-    margin: 1em 1em 1em 1em; /*top right bottom left*/
+    margin: 1em -3em 1em -3em; /*top right bottom left*/
     width: fit-content;
-    max-width: 11%;
+    width: 25%;
     word-wrap: break-word;
 }
 .Preis{
     text-align: center;
-    border: 1px solid red;
-    margin: 1em 1em; /*top right bottom left*/
+    margin: 1em -3em 1em -3em; /*top right bottom left*/
     width: fit-content;
-    max-width: 11%;
+    width: 7%;
     word-wrap: break-word;
 }
 .Gewicht{
     text-align: center;
-    border: 1px solid red;
-    margin: 1em 1em 1em 1em; /*top right bottom left*/
+    margin: 1em -3em 1em -3em; /*top right bottom left*/
     width: fit-content;
-    max-width: 11%;
+    width: 7%;
     word-wrap: break-word;
 }
 .Lagerbestand{
     text-align: center;
-    border: 1px solid red;
-    margin: 1em 1em; /*top right bottom left*/
+    margin: 1em -3em 1em -3em; /*top right bottom left*/
     width: fit-content;
-    max-width: 11%;
+    width: 7%;
     word-wrap: break-word;
+/* border: 1px solid red; */
 }
 .Bestellung{
     text-align: center;
-    border: 1px solid red;
-    margin: 1em 1em 1em 1em; /*top right bottom left*/
+    margin: 1em 0.5em 1em -3em; /*top right bottom left*/
     width: fit-content;
-    max-width: 11%;
+    width: 7%;
     word-wrap: break-word;
+/* border: 1px solid red; */
 }
+/* Ab hier unter Objekte der Bestellungs-box */
 .menge{
     text-align: center;
-    border: 1px solid red;
+    /* border: 1px solid red; */
     margin: 1.5em 0.5em 0.5em 0.5em; /*top right bottom left*/
 }
 .buttons{
-    border: 1px solid red;
+    /* border: 1px solid red; */
     display: flex;
     margin: 1.5em 0.5em 0.5em 0.5em; /*top right bottom left*/
 }
